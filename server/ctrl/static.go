@@ -1,20 +1,20 @@
 package ctrl
 
 import (
-	. "github.com/mickael-kerjean/filestash/server/common"
 	"fmt"
+	. "github.com/mickael-kerjean/filestash/server/common"
 	"io"
-	"text/template"
 	"net/http"
 	URL "net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 func StaticHandler(_path string) func(App, http.ResponseWriter, *http.Request) {
 	return func(ctx App, res http.ResponseWriter, req *http.Request) {
-		var base string = GetAbsolutePath(_path)
+		var base string = GetAbsolutePath(_path, "")
 		var srcPath string
 		if srcPath = JoinPath(base, req.URL.Path); srcPath == base {
 			http.NotFound(res, req)
@@ -44,11 +44,11 @@ func IndexHandler(_path string) func(App, http.ResponseWriter, *http.Request) {
 			res.Write([]byte(Page("<h1>404 - Not Found</h1>")))
 			return
 		}
-		ua := req.Header.Get("User-Agent");
-		if strings.Contains(ua, "MSIE ") || strings.Contains(ua, "Edge/"){
+		ua := req.Header.Get("User-Agent")
+		if strings.Contains(ua, "MSIE ") || strings.Contains(ua, "Edge/") {
 			// Microsoft is behaving on many occasion differently than Firefox / Chrome.
 			// I have neither the time / motivation for it to work properly
-			res.WriteHeader(http.StatusBadRequest)			
+			res.WriteHeader(http.StatusBadRequest)
 			res.Write([]byte(
 				Page(`
                   <h1>Internet explorer is not supported</h1>
@@ -60,7 +60,7 @@ func IndexHandler(_path string) func(App, http.ResponseWriter, *http.Request) {
                 `)))
 			return
 		}
-		srcPath := GetAbsolutePath(_path)
+		srcPath := GetAbsolutePath(_path, "")
 		ServeFile(res, req, srcPath)
 	}
 }
@@ -79,12 +79,12 @@ func AboutHandler(ctx App, res http.ResponseWriter, req *http.Request) {
 	  </style>
 	`))
 	t.Execute(res, struct {
-		App     []string
-	}{ []string{
+		App []string
+	}{[]string{
 		"Filestash " + APP_VERSION + "." + BUILD_DATE,
 		BUILD_REF,
-		hashFileContent(filepath.Join(GetCurrentDir(), "/filestash"), 0),
-		hashFileContent(filepath.Join(GetCurrentDir(), CONFIG_PATH, "config.json"), 0),
+		hashFileContent(filepath.Join(GetExecutableDir(), "/filestash"), 0),
+		hashFileContent(filepath.Join(GetConfigDir(), CONFIG_PATH, "config.json"), 0),
 	}})
 }
 
@@ -158,6 +158,6 @@ func hashFileContent(path string, n int) string {
 	if err != nil {
 		return ""
 	}
-	defer f.Close()	
+	defer f.Close()
 	return HashStream(f, n)
 }

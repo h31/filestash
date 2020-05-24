@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	logpath = filepath.Join(GetCurrentDir(), LOG_PATH, "access.log")
-	configpath = filepath.Join(GetCurrentDir(), CONFIG_PATH, "config.json")
+	logpath    = filepath.Join(GetLogDir(), LOG_PATH, "access.log")
+	configpath = filepath.Join(GetConfigDir(), CONFIG_PATH, "config.json")
 )
 
 func FetchLogHandler(ctx App, res http.ResponseWriter, req *http.Request) {

@@ -8,7 +8,7 @@ import (
 
 var MOCK_CURRENT_DIR string
 
-func GetCurrentDir() string {
+func GetExecutableDir() string {
 	if MOCK_CURRENT_DIR != "" {
 		return MOCK_CURRENT_DIR
 	}
@@ -16,15 +16,43 @@ func GetCurrentDir() string {
 	return filepath.Dir(ex)
 }
 
-func GetAbsolutePath(p string) string {
-	return filepath.Join(GetCurrentDir(), p)
+func GetConfigDir() string {
+	if configDir := os.Getenv("FILESTASH_CONFIG_DIR"); len(configDir) != 0 {
+		return configDir
+	} else {
+		return GetExecutableDir()
+	}
+}
+
+func GetCacheDir() string {
+	if cacheDir := os.Getenv("FILESTASH_CACHE_DIR"); len(cacheDir) != 0 {
+		return cacheDir
+	} else {
+		return GetExecutableDir()
+	}
+}
+
+func GetLogDir() string {
+	if logDir := os.Getenv("FILESTASH_LOG_DIR"); len(logDir) != 0 {
+		return logDir
+	} else {
+		return GetExecutableDir()
+	}
+}
+
+func GetAbsolutePath(base, p string) string {
+	if path, err := filepath.Abs(filepath.Join(base, p)); err == nil {
+		return path
+	} else {
+		panic(err)
+	}
 }
 
 func IsDirectory(path string) bool {
 	if path == "" {
 		return false
 	}
-	if path[len(path) - 1:] != "/" {
+	if path[len(path)-1:] != "/" {
 		return false
 	}
 	return true
@@ -44,7 +72,7 @@ func JoinPath(base, file string) string {
 func EnforceDirectory(path string) string {
 	if path == "" {
 		return "/"
-	} else if path[len(path) - 1:] == "/" {
+	} else if path[len(path)-1:] == "/" {
 		return path
 	}
 	return path + "/"

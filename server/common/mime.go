@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-var MimeTypes map[string]string = map[string]string{ "txt": "text/plain" }
+var MimeTypes map[string]string = map[string]string{"txt": "text/plain"}
 
 func init() {
-	path := filepath.Join(GetCurrentDir(), CONFIG_PATH + "mime.json")
+	path := filepath.Join(GetConfigDir(), CONFIG_PATH+"mime.json")
 	if f, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm); err == nil {
 		j, _ := ioutil.ReadAll(f)
 		json.Unmarshal(j, &MimeTypes)

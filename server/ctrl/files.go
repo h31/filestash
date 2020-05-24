@@ -3,15 +3,15 @@ package ctrl
 import (
 	"encoding/base64"
 	"fmt"
-	"hash/fnv"
 	. "github.com/mickael-kerjean/filestash/server/common"
 	"github.com/mickael-kerjean/filestash/server/model"
+	"hash/fnv"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,7 +26,7 @@ var FileCache AppCache
 
 func init() {
 	FileCache = NewAppCache()
-	cachePath := filepath.Join(GetCurrentDir(), TMP_PATH)
+	cachePath := filepath.Join(GetCacheDir(), TMP_PATH)
 	FileCache.OnEvict(func(key string, value interface{}) {
 		os.RemoveAll(filepath.Join(cachePath, key))
 	})
@@ -57,7 +57,7 @@ func FileLs(ctx App, res http.ResponseWriter, req *http.Request) {
 	files := make([]FileInfo, len(entries))
 	etagger := fnv.New32()
 	etagger.Write([]byte(path + strconv.Itoa(len(entries))))
-	for i:=0; i<len(entries); i++ {
+	for i := 0; i < len(entries); i++ {
 		name := entries[i].Name()
 		modTime := entries[i].ModTime().UnixNano() / int64(time.Millisecond)
 
@@ -135,7 +135,7 @@ func FileCat(ctx App, res http.ResponseWriter, req *http.Request) {
 	if req.Header.Get("range") != "" {
 		ctx.Session["_path"] = path
 		if p := FileCache.Get(ctx.Session); p != nil {
-			f, err := os.OpenFile(p.(string), os.O_RDONLY, os.ModePerm);
+			f, err := os.OpenFile(p.(string), os.O_RDONLY, os.ModePerm)
 			if err == nil {
 				file = f
 				if fi, err := f.Stat(); err == nil {
@@ -155,7 +155,7 @@ func FileCat(ctx App, res http.ResponseWriter, req *http.Request) {
 		if req.Header.Get("range") != "" {
 			needToCreateCache = true
 		}
-		go model.SProc.HintLs(&ctx, filepath.Dir(path) + "/")
+		go model.SProc.HintLs(&ctx, filepath.Dir(path)+"/")
 	}
 
 	// plugin hooks
@@ -178,8 +178,8 @@ func FileCat(ctx App, res http.ResponseWriter, req *http.Request) {
 				}
 			}
 		} else {
-			tmpPath := filepath.Join(GetCurrentDir(), TMP_PATH, "file_" + QuickString(20) + ".dat")
-			f, err := os.OpenFile(tmpPath, os.O_RDWR|os.O_CREATE, os.ModePerm);
+			tmpPath := filepath.Join(GetCacheDir(), TMP_PATH, "file_"+QuickString(20)+".dat")
+			f, err := os.OpenFile(tmpPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 			if err != nil {
 				SendErrorResult(res, err)
 				return
@@ -225,7 +225,7 @@ func FileCat(ctx App, res http.ResponseWriter, req *http.Request) {
 				}
 			}
 
-			if start != -1 && end != -1 && end - start >= 0 {
+			if start != -1 && end != -1 && end-start >= 0 {
 				ranges = append(ranges, []int64{start, end})
 			}
 		}
@@ -245,9 +245,9 @@ func FileCat(ctx App, res http.ResponseWriter, req *http.Request) {
 		if f, ok := file.(io.ReadSeeker); ok && len(ranges) > 0 {
 			if _, err = f.Seek(ranges[0][0], io.SeekStart); err == nil {
 				header.Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", ranges[0][0], ranges[0][1], contentLength))
-				header.Set("Content-Length", fmt.Sprintf("%d", ranges[0][1] - ranges[0][0] + 1))
+				header.Set("Content-Length", fmt.Sprintf("%d", ranges[0][1]-ranges[0][0]+1))
 				res.WriteHeader(http.StatusPartialContent)
-				io.CopyN(res, f, ranges[0][1] - ranges[0][0] + 1)
+				io.CopyN(res, f, ranges[0][1]-ranges[0][0]+1)
 			} else {
 				res.WriteHeader(http.StatusRequestedRangeNotSatisfiable)
 			}
@@ -260,13 +260,13 @@ func FileCat(ctx App, res http.ResponseWriter, req *http.Request) {
 
 func FileAccess(ctx App, res http.ResponseWriter, req *http.Request) {
 	allowed := []string{}
-	if model.CanRead(&ctx){
+	if model.CanRead(&ctx) {
 		allowed = append(allowed, "GET")
 	}
-	if model.CanEdit(&ctx){
+	if model.CanEdit(&ctx) {
 		allowed = append(allowed, "PUT")
 	}
-	if model.CanUpload(&ctx){
+	if model.CanUpload(&ctx) {
 		allowed = append(allowed, "POST")
 	}
 	header := res.Header()
@@ -299,7 +299,7 @@ func FileSave(ctx App, res http.ResponseWriter, req *http.Request) {
 		SendErrorResult(res, NewError(err.Error(), 403))
 		return
 	}
-	go model.SProc.HintLs(&ctx, filepath.Dir(path) + "/")
+	go model.SProc.HintLs(&ctx, filepath.Dir(path)+"/")
 	go model.SProc.HintFile(&ctx, path)
 	SendSuccessResult(res, nil)
 }
@@ -331,8 +331,8 @@ func FileMv(ctx App, res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	go model.SProc.HintRm(&ctx, filepath.Dir(from) + "/")
-	go model.SProc.HintLs(&ctx, filepath.Dir(to) + "/")
+	go model.SProc.HintRm(&ctx, filepath.Dir(from)+"/")
+	go model.SProc.HintLs(&ctx, filepath.Dir(to)+"/")
 	SendSuccessResult(res, nil)
 }
 
@@ -373,7 +373,7 @@ func FileMkdir(ctx App, res http.ResponseWriter, req *http.Request) {
 		SendErrorResult(res, err)
 		return
 	}
-	go model.SProc.HintLs(&ctx, filepath.Dir(path) + "/")
+	go model.SProc.HintLs(&ctx, filepath.Dir(path)+"/")
 	SendSuccessResult(res, nil)
 }
 
@@ -394,7 +394,7 @@ func FileTouch(ctx App, res http.ResponseWriter, req *http.Request) {
 		SendErrorResult(res, err)
 		return
 	}
-	go model.SProc.HintLs(&ctx, filepath.Dir(path) + "/")
+	go model.SProc.HintLs(&ctx, filepath.Dir(path)+"/")
 	SendSuccessResult(res, nil)
 }
 
