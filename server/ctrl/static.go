@@ -14,7 +14,7 @@ import (
 
 func StaticHandler(_path string) func(App, http.ResponseWriter, *http.Request) {
 	return func(ctx App, res http.ResponseWriter, req *http.Request) {
-		var base string = GetAbsolutePath(_path, "")
+		var base string = GetAbsolutePath(GetPublicDataDir(), _path)
 		var srcPath string
 		if srcPath = JoinPath(base, req.URL.Path); srcPath == base {
 			http.NotFound(res, req)
@@ -60,7 +60,7 @@ func IndexHandler(_path string) func(App, http.ResponseWriter, *http.Request) {
                 `)))
 			return
 		}
-		srcPath := GetAbsolutePath(_path, "")
+		srcPath := GetAbsolutePath(GetPublicDataDir(), _path)
 		ServeFile(res, req, srcPath)
 	}
 }

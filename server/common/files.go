@@ -40,6 +40,14 @@ func GetLogDir() string {
 	}
 }
 
+func GetPublicDataDir() string {
+	if logDir := os.Getenv("FILESTASH_PUBLIC_DATA_DIR"); len(logDir) != 0 {
+		return logDir
+	} else {
+		return GetExecutableDir()
+	}
+}
+
 func GetAbsolutePath(base, p string) string {
 	if path, err := filepath.Abs(filepath.Join(base, p)); err == nil {
 		return path
