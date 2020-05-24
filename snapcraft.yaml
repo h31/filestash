@@ -1,0 +1,175 @@
+name: filestash-h31
+version: '0.4.1'
+summary: OfflineIMAP
+description: |
+  OfflineIMAP is software that downloads your email mailbox(es) as local
+  Maildirs. OfflineIMAP will synchronize both sides via IMAP.
+confinement: devmode
+base: core18
+
+parts:
+  patches:
+    source: patches
+    plugin: dump
+    prime:
+      - -*
+
+  frontend:
+    plugin: nil
+    source-type: git
+    source: https://github.com/mickael-kerjean/filestash
+    source-depth: 1
+    build-packages:
+    - make
+    build-snaps:
+    - node/12/stable
+    override-build: |
+      mkdir -p ./dist/data/state/
+      cp -R config ./dist/data/state/
+      PATH=$(pwd)/../npm/bin:$PATH
+      unset SUDO_UID
+      unset SUDO_GID
+      npm --unsafe-perm install
+      NODE_ENV=production npm --unsafe-perm run build
+      cp -R ./dist/data $SNAPCRAFT_PART_INSTALL/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin/data/state/
+      cp -R config $SNAPCRAFT_PART_INSTALL/bin/data/state/
+      
+  libvips:
+    plugin: autotools
+    source-type: git
+    source: https://github.com/libvips/libvips
+    source-tag: v8.7.0
+    source-depth: 1
+    build-packages:
+    - build-essential
+    - pkg-config
+    - libglib2.0-dev
+    - swig
+    - flex
+    - bison
+    - bc
+    - gobject-introspection
+    - libjpeg-dev
+    - libtiff-dev
+    - libpng-dev
+    - libgif-dev
+    - librsvg2-dev
+    - libpoppler-glib-dev
+    - zlib1g-dev
+    - liblzma-dev
+    - libfftw3-dev
+    - liblcms2-dev
+    - libmagickcore-dev
+    - libmagickwand-dev
+    - libfreetype6-dev
+    - libpango1.0-dev
+    - libfontconfig1-dev
+    - libice-dev
+    - gettext
+    - libxml-parser-perl
+    - libexif-gtk-dev
+    - python3-all-dev
+    - python3-dev
+    - python-gi-dev
+    - liborc-0.4-dev
+    - libopenexr-dev
+    - libmatio-dev
+    - libexpat1-dev
+    - libcfitsio-dev
+    - libopenslide-dev
+    - libwebp-dev
+    - libgsf-1-dev
+    - libgirepository1.0-dev
+    - gtk-doc-tools
+    stage-packages:
+    - libgsf-1-114
+    - libicu60
+    - libpng16-16
+    - libxml2
+    configflags:
+    - --enable-static
+    - --without-magick
+    - --without-lcms
+    - --without-OpenEXR
+    - --without-nifti
+    - --without-pdfium
+    - --without-rsvg
+    - --without-matio
+    - --without-libwebp
+    - --without-cfitsio
+    - --without-zlib
+    - --without-poppler
+    - --without-pangoft2
+    - --enable-introspection=no
+    - --without-openslide
+
+      
+  libresize:
+    plugin: dump
+    source-type: git
+    source: https://github.com/mickael-kerjean/filestash
+    source-depth: 1
+    after:
+    - libvips
+    build-packages:
+    - build-essential
+    - pkg-config
+    - libraw-dev
+      
+  backend:
+    plugin: go
+    source-type: git
+    source: https://github.com/mickael-kerjean/filestash
+    source-depth: 1
+    after:
+    - libresize
+    - patches
+    build-packages:
+    - build-essential
+    - pkg-config
+    - libraw-dev
+    override-pull: |
+      snapcraftctl pull
+      git apply $SNAPCRAFT_STAGE/pkg-config.patch
+    stage-packages:
+    - libexif12
+    - libfftw3-double3
+    - libgif7
+    - libgomp1
+    - libjbig0
+    - libjpeg-turbo8
+    - liblcms2-2
+    - liborc-0.4-0
+    - libraw16
+    - libtiff5
+    override-build: |
+      cd server/plugin/plg_image_light/deps/
+      gcc -Wall -c src/libresize.c -I/root/stage/include/ `pkg-config --cflags glib-2.0`
+      ar rcs libresize.a libresize.o
+      cp libresize.a libresize_linux_amd64.a
+      gcc -Wall -c src/libtranscode.c -lraw -lraw_r
+      ar rcs libtranscode.a libtranscode.o
+      cp libtranscode.a libtranscode_linux_amd64.a
+      cd -
+      CGO_CFLAGS_ALLOW='-fopenmp'
+      #  -linkmode external -extldflags -static
+      go build -mod=vendor --tags "fts5" -ldflags "-X github.com/mickael-kerjean/filestash/server/common.BUILD_DATE=`date -u +%Y%m%d` -X github.com/mickael-kerjean/filestash/server/common.BUILD_REF=`git rev-parse HEAD`" -o $SNAPCRAFT_PART_INSTALL/bin/filestash server/main.go
+      
+layout:
+  /bin/filestash:
+    bind-file: $SNAP/bin/filestash
+  /bin/data/state:
+    symlink: $SNAP_COMMON/data/state
+  /bin/data/cache:
+    symlink: $SNAP_DATA/data/cache
+
+apps:
+  filestash:
+    command: /bin/filestash
+    environment:
+      LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
+  bash:
+    command: /bin/bash
+    environment:
+      LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
