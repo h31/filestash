@@ -8,17 +8,12 @@ confinement: devmode
 base: core18
 
 parts:
-  patches:
-    source: patches
-    plugin: dump
-    prime:
-      - -*
-
   frontend:
     plugin: nil
     source-type: git
-    source: https://github.com/mickael-kerjean/filestash
+    source: https://github.com/h31/filestash
     source-depth: 1
+    source-branch: "packages"
     build-packages:
     - make
     build-snaps:
@@ -34,7 +29,7 @@ parts:
       cp -R ./dist/data $SNAPCRAFT_PART_INSTALL/
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin/data/state/
       cp -R config $SNAPCRAFT_PART_INSTALL/bin/data/state/
-      
+
   libvips:
     plugin: autotools
     source-type: git
@@ -104,34 +99,32 @@ parts:
     - --enable-introspection=no
     - --without-openslide
 
-      
+
   libresize:
     plugin: dump
     source-type: git
-    source: https://github.com/mickael-kerjean/filestash
+    source: https://github.com/h31/filestash
     source-depth: 1
+    source-branch: "packages"
     after:
     - libvips
     build-packages:
     - build-essential
     - pkg-config
     - libraw-dev
-      
+
   backend:
     plugin: go
     source-type: git
-    source: https://github.com/mickael-kerjean/filestash
+    source: https://github.com/h31/filestash
     source-depth: 1
+    source-branch: "packages"
     after:
     - libresize
-    - patches
     build-packages:
     - build-essential
     - pkg-config
     - libraw-dev
-    override-pull: |
-      snapcraftctl pull
-      git apply $SNAPCRAFT_STAGE/pkg-config.patch
     stage-packages:
     - libexif12
     - libfftw3-double3
@@ -155,7 +148,7 @@ parts:
       CGO_CFLAGS_ALLOW='-fopenmp'
       #  -linkmode external -extldflags -static
       go build -mod=vendor --tags "fts5" -ldflags "-X github.com/mickael-kerjean/filestash/server/common.BUILD_DATE=`date -u +%Y%m%d` -X github.com/mickael-kerjean/filestash/server/common.BUILD_REF=`git rev-parse HEAD`" -o $SNAPCRAFT_PART_INSTALL/bin/filestash server/main.go
-      
+
 layout:
   /bin/filestash:
     bind-file: $SNAP/bin/filestash
