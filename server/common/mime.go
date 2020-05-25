@@ -12,6 +12,9 @@ var MimeTypes map[string]string = map[string]string{"txt": "text/plain"}
 
 func init() {
 	path := filepath.Join(GetConfigDir(), CONFIG_PATH+"mime.json")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		CopyDefaultConfig()
+	}
 	if f, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm); err == nil {
 		j, _ := ioutil.ReadAll(f)
 		json.Unmarshal(j, &MimeTypes)

@@ -16,36 +16,32 @@ func GetExecutableDir() string {
 	return filepath.Dir(ex)
 }
 
-func GetConfigDir() string {
-	if configDir := os.Getenv("FILESTASH_CONFIG_DIR"); len(configDir) != 0 {
-		return configDir
+func getDirFromEnvironment(key string) string {
+	if dir := os.Getenv(key); len(dir) != 0 {
+		return dir
 	} else {
 		return GetExecutableDir()
 	}
+}
+
+func GetConfigDir() string {
+	return getDirFromEnvironment("FILESTASH_CONFIG_DIR")
 }
 
 func GetCacheDir() string {
-	if cacheDir := os.Getenv("FILESTASH_CACHE_DIR"); len(cacheDir) != 0 {
-		return cacheDir
-	} else {
-		return GetExecutableDir()
-	}
+	return getDirFromEnvironment("FILESTASH_CACHE_DIR")
 }
 
 func GetLogDir() string {
-	if logDir := os.Getenv("FILESTASH_LOG_DIR"); len(logDir) != 0 {
-		return logDir
-	} else {
-		return GetExecutableDir()
-	}
+	return getDirFromEnvironment("FILESTASH_LOG_DIR")
 }
 
 func GetPublicDataDir() string {
-	if logDir := os.Getenv("FILESTASH_PUBLIC_DATA_DIR"); len(logDir) != 0 {
-		return logDir
-	} else {
-		return GetExecutableDir()
-	}
+	return getDirFromEnvironment("FILESTASH_PUBLIC_DATA_DIR")
+}
+
+func GetDefaultConfigDir() string {
+	return getDirFromEnvironment("FILESTASH_DEFAULT_CONFIG_DIR")
 }
 
 func GetAbsolutePath(base, p string) string {

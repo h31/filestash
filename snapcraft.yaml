@@ -139,13 +139,11 @@ parts:
       CGO_CFLAGS_ALLOW='-fopenmp'
       #  -linkmode external -extldflags -static
       go build -mod=vendor --tags "fts5" -ldflags "-X github.com/mickael-kerjean/filestash/server/common.BUILD_DATE=`date -u +%Y%m%d` -X github.com/mickael-kerjean/filestash/server/common.BUILD_REF=`git rev-parse HEAD`" -o $SNAPCRAFT_PART_INSTALL/bin/filestash server/main.go
-      cp init.sh $SNAPCRAFT_PART_INSTALL/bin/
 
 apps:
-  filestash:
-    command: filestash
-    command-chain:
-      - init.sh
+  filestash-h31:
+    command: bin/filestash
+    daemon: simple
     environment:
       FILESTASH_CONFIG_DIR: $SNAP_COMMON/
       FILESTASH_CACHE_DIR: $SNAP_DATA/
