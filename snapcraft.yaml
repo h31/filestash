@@ -1,9 +1,9 @@
 name: filestash-h31
-version: '0.4.1'
-summary: OfflineIMAP
+version: git
+summary: A modern web client for SFTP, S3, FTP, WebDAV, Git, LDAP, Backblaze, ...
 description: |
-    OfflineIMAP is software that downloads your email mailbox(es) as local
-    Maildirs. OfflineIMAP will synchronize both sides via IMAP.
+    Filestash is web application that's used as a file manager to manage your data using: FTP • FTPS • SFTP • WebDAV • Git • S3 • LDAP • Mysql • CardDAV • CalDAV • Backblaze B2 • Minio • Dropbox • Google Drive
+grade: stable
 confinement: strict
 base: core18
 
@@ -150,7 +150,8 @@ apps:
             FILESTASH_LOG_DIR: $SNAP_DATA/
             FILESTASH_PUBLIC_DATA_DIR: $SNAP/
             LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
-    bash:
-        command: /bin/bash
-        environment:
-            LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
+        plugs:
+            - network
+            - network-bind
+            - removable-media
+            - home
