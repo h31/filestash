@@ -12,7 +12,6 @@ parts:
         plugin: nil
         source-type: git
         source: https://github.com/h31/filestash
-        source-depth: 1
         source-branch: "packages"
         build-packages:
             - make
@@ -25,8 +24,8 @@ parts:
             npm --unsafe-perm install
             NODE_ENV=production npm --unsafe-perm run build
             cp -R ./dist/data $SNAPCRAFT_PART_INSTALL/
-            mkdir -p $SNAPCRAFT_PART_INSTALL/bin/data/state/
-            cp -R config $SNAPCRAFT_PART_INSTALL/bin/data/state/
+            mkdir -p $SNAPCRAFT_PART_INSTALL/data/state/
+            cp -R config $SNAPCRAFT_PART_INSTALL/data/state/
 
     libvips:
         plugin: autotools
@@ -76,17 +75,17 @@ parts:
             - libgirepository1.0-dev
             - gtk-doc-tools
         stage-packages:
-            - libgsf-1-114
-            - libicu60
-            - libpng16-16
-            - libxml2
             - libexif12
             - libfftw3-double3
             - libgif7
+            - libgsf-1-114
+            - libicu60
             - libjbig0
             - libjpeg-turbo8
             - liborc-0.4-0
+            - libpng16-16
             - libtiff5
+            - libxml2
         configflags:
             - --enable-static
             - --without-magick
@@ -103,12 +102,13 @@ parts:
             - --without-pangoft2
             - --enable-introspection=no
             - --without-openslide
+        prime:
+            - lib
 
     backend:
         plugin: go
         source-type: git
         source: https://github.com/h31/filestash
-        source-depth: 1
         source-branch: "packages"
         after:
             - libvips
@@ -121,12 +121,16 @@ parts:
             - libfftw3-double3
             - libgif7
             - libgomp1
+            - libgsf-1-114
+            - libicu60
             - libjbig0
             - libjpeg-turbo8
             - liblcms2-2
             - liborc-0.4-0
+            - libpng16-16
             - libraw16
             - libtiff5
+            - libxml2
         override-build: |
             cd server/plugin/plg_image_light/deps/
             gcc -Wall -c src/libresize.c -I/root/stage/include/ `pkg-config --cflags glib-2.0`
@@ -149,6 +153,7 @@ apps:
             FILESTASH_CACHE_DIR: $SNAP_DATA/
             FILESTASH_LOG_DIR: $SNAP_DATA/
             FILESTASH_PUBLIC_DATA_DIR: $SNAP/
+            FILESTASH_DEFAULT_CONFIG_DIR: $SNAP/
             LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
         plugs:
             - network
