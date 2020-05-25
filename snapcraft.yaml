@@ -19,8 +19,6 @@ parts:
     build-snaps:
     - node/12/stable
     override-build: |
-      mkdir -p ./dist/data/state/
-      cp -R config ./dist/data/state/
       PATH=$(pwd)/../npm/bin:$PATH
       unset SUDO_UID
       unset SUDO_GID
@@ -82,6 +80,13 @@ parts:
     - libicu60
     - libpng16-16
     - libxml2
+    - libexif12
+    - libfftw3-double3
+    - libgif7
+    - libjbig0
+    - libjpeg-turbo8
+    - liborc-0.4-0
+    - libtiff5
     configflags:
     - --enable-static
     - --without-magick
@@ -99,20 +104,6 @@ parts:
     - --enable-introspection=no
     - --without-openslide
 
-
-  libresize:
-    plugin: dump
-    source-type: git
-    source: https://github.com/h31/filestash
-    source-depth: 1
-    source-branch: "packages"
-    after:
-    - libvips
-    build-packages:
-    - build-essential
-    - pkg-config
-    - libraw-dev
-
   backend:
     plugin: go
     source-type: git
@@ -120,7 +111,7 @@ parts:
     source-depth: 1
     source-branch: "packages"
     after:
-    - libresize
+    - libvips
     build-packages:
     - build-essential
     - pkg-config
@@ -148,19 +139,18 @@ parts:
       CGO_CFLAGS_ALLOW='-fopenmp'
       #  -linkmode external -extldflags -static
       go build -mod=vendor --tags "fts5" -ldflags "-X github.com/mickael-kerjean/filestash/server/common.BUILD_DATE=`date -u +%Y%m%d` -X github.com/mickael-kerjean/filestash/server/common.BUILD_REF=`git rev-parse HEAD`" -o $SNAPCRAFT_PART_INSTALL/bin/filestash server/main.go
-
-layout:
-  /bin/filestash:
-    bind-file: $SNAP/bin/filestash
-  /bin/data/state:
-    symlink: $SNAP_COMMON/data/state
-  /bin/data/cache:
-    symlink: $SNAP_DATA/data/cache
+      cp init.sh $SNAPCRAFT_PART_INSTALL/bin/
 
 apps:
   filestash:
-    command: /bin/filestash
+    command: filestash
+    command-chain:
+      - init.sh
     environment:
+      FILESTASH_CONFIG_DIR: $SNAP_COMMON/
+      FILESTASH_CACHE_DIR: $SNAP_DATA/
+      FILESTASH_LOG_DIR: $SNAP_DATA/
+      FILESTASH_PUBLIC_DATA_DIR: $SNAP/
       LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
   bash:
     command: /bin/bash
